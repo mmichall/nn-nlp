@@ -14,10 +14,10 @@ class LSTM(nn.Module):
         self.batch_size = batch_size
         self.num_layers = num_layers
 
-        self.embeding = nn.Embedding(self.embed_size, self.hidden_dim)
+        self.embeding = nn.Embedding(self.embed_size, self.input_dim)
 
         # Define the LSTM layer
-        self.lstm = nn.LSTM(self.input_dim, self.hidden_dim, self.num_layers)
+        self.lstm = nn.LSTM(self.input_dim, self.hidden_dim, self.num_layers, dropout=0.5, bidirectional=False)
 
         # Define the output layer
         self.linear = nn.Linear(self.hidden_dim, output_dim)
@@ -30,8 +30,6 @@ class LSTM(nn.Module):
     def forward(self, input):
         embeds = self.embeding(input.view(len(input), -1))
 
-        print(embeds.size())
-
         # Forward pass through LSTM layer
         # shape of lstm_out: [input_size, batch_size, hidden_dim]
         # shape of self.hidden: (a, b), where a and b both
@@ -41,5 +39,7 @@ class LSTM(nn.Module):
 
         # Only take the output from the final timetep
         # Can pass on the entirety of lstm_out to the next layer if it is a seq2seq prediction
-        y_pred = self.linear(lstm_out[-1].view(-1, 100))
+        y_pred = self.linear(lstm_out[-1].view(-1, self.hidden_dim))
         return y_pred.view(-1)
+
+
