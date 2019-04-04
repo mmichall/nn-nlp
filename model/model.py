@@ -17,7 +17,7 @@ class LSTM(nn.Module):
         self.embeddings = nn.Embedding(self.vocab_size, self.embed_size)
 
         # Define the LSTM layer
-        self.lstm = nn.LSTM(self.embed_size, self.hidden_dim, self.num_layers, dropout=0.5, bidirectional=False)
+        self.lstm = nn.LSTM(self.embed_size, self.hidden_dim, self.num_layers, dropout=0.5, bidirectional=False, bias=True)
 
         # Define the output layer
         self.linear = nn.Linear(self.hidden_dim, output_dim)
@@ -28,18 +28,19 @@ class LSTM(nn.Module):
                 torch.zeros(self.num_layers, self.batch_size, self.hidden_dim))
 
     def forward(self, input):
-        embeds = self.embeddings(input.view(len(input), -1))
+        #in_ = input.view(len(input), -1)
+        embeds = self.embeddings(input)
 
         # Forward pass through LSTM layer
         # shape of lstm_out: [input_size, batch_size, hidden_dim]
         # shape of self.hidden: (a, b), where a and b both
         # have shape (num_layers, batch_size, hidden_dim).
 
-        lstm_out, self.hidden = self.lstm(embeds)
+        lstm_out, self.hidden = self.lstm(embeds.view(-1, self.batch_size, self.embed_size))
 
         # Only take the output from the final timetep
         # Can pass on the entirety of lstm_out to the next layer if it is a seq2seq prediction
-        y_pred = self.linear(lstm_out[-1].view(-1, self.hidden_dim))
+        y_pred = self.linear(lstm_out[-1].view(self.batch_size, -1))
         return y_pred.view(-1)
 
 

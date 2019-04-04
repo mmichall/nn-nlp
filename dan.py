@@ -15,8 +15,8 @@ pprint("is CUDA available: {} so running on {}".format(torch.cuda.is_available()
 
 # defining fields and tokenize function
 tokenize = lambda x: x.split()
-text_field = Field(sequential=True, tokenize=tokenize, lower=True)
-label_field = Field(sequential=True, lower=True, use_vocab=True, is_target=True)
+text_field = Field(sequential=True, tokenize=tokenize, lower=True, pad_first=True)
+label_field = Field(sequential=True, lower=True, use_vocab=True, is_target=True, pad_first=True)
 
 # defining datafields
 train_valid_datafields = [("id", None), ("type", None), ("review", text_field), ("label", label_field)]
@@ -62,7 +62,13 @@ test_iter = Iterator(test_dataset, batch_size=128, device=device, sort=False, so
 model = LSTM(vocab_size=len(text_field.vocab.stoi), embed_size=100, hidden_dim=180, batch_size=128, output_dim=1, num_layers=1)
 model.embeddings.weight.data = text_field.vocab.vectors
 model.cuda()
-
+'''
+for example in train_dataset:
+    for word in example.review:
+        pprint(word)
+        if word in text_field.vocab.itos:
+            pprint(model.embeddings(word))
+'''
 # training the LSTM model
 num_epochs = 10
 loss_fn = torch.nn.MSELoss(size_average=True)
@@ -70,7 +76,7 @@ optimiser = torch.optim.Adam(model.parameters(), lr=0.001)
 
 
 for epoch in range(num_epochs):
-    model.train()
+    #model.train()
 
     hist = []
     pbar = tqdm(enumerate(train_iter))
@@ -86,7 +92,7 @@ for epoch in range(num_epochs):
         # Forward pass
         y_pred = model(text)
 
-        target = target.float()
+        target = target.float().view(-1)
         loss = loss_fn(y_pred, target)
 
         hist.append(loss.item())
