@@ -7,6 +7,7 @@ from torchtext.vocab import Vocab
 from torchtext.data import Iterator, BucketIterator
 import numpy as np
 from tqdm.auto import tqdm, trange
+from torch.nn.functional import cosine_similarity
 
 from model.model import LSTM
 
@@ -62,13 +63,16 @@ test_iter = Iterator(test_dataset, batch_size=128, device=device, sort=False, so
 model = LSTM(vocab_size=len(text_field.vocab.stoi), embed_size=100, hidden_dim=180, batch_size=128, output_dim=1, num_layers=1)
 model.embeddings.weight.data = text_field.vocab.vectors
 model.cuda()
+
 '''
 for example in train_dataset:
     for word in example.review:
         pprint(word)
+        
         if word in text_field.vocab.itos:
             pprint(model.embeddings(word))
 '''
+
 # training the LSTM model
 num_epochs = 10
 loss_fn = torch.nn.MSELoss(size_average=True)
