@@ -1,15 +1,14 @@
-from pprint import pprint
-
 import torch
+import numpy as np
+
 from torchtext.data import Field
 from torchtext.data import TabularDataset
 from torchtext.vocab import Vocab
 from torchtext.data import Iterator, BucketIterator
-import numpy as np
-from tqdm.auto import tqdm, trange
-from torch.nn.functional import cosine_similarity
 
+from tqdm.auto import tqdm
 from model.model import LSTM
+from pprint import pprint
 
 device = torch.device('cuda:0' if (torch.cuda.is_available()) else 'cpu')
 pprint("is CUDA available: {} so running on {}".format(torch.cuda.is_available(), device))
