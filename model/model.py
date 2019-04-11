@@ -6,7 +6,7 @@ from torch.autograd import Variable
 
 
 class LSTM(nn.Module):
-    def __init__(self, embed_size, hidden_dim, batch_size, vocab_size, output_dim=1,  num_layers=1):
+    def __init__(self, embed_size, hidden_dim, batch_size, vocab_size, output_dim=1, num_layers=1):
         super(LSTM, self).__init__()
         self.embed_size = embed_size
         self.hidden_dim = hidden_dim
@@ -17,10 +17,20 @@ class LSTM(nn.Module):
         self.embeddings = nn.Embedding(self.vocab_size, self.embed_size)
 
         # Define the LSTM layer
-        self.lstm = nn.LSTM(self.embed_size, self.hidden_dim, self.num_layers,
+        '''
+        input_size: The number of expected features in the input `x`
+        hidden_size: The number of features in the hidden state `h`
+        num_layers: Number of recurrent layers. E.g., setting ``num_layers=2``
+            would mean stacking two LSTMs together to form a `stacked LSTM`,
+            with the second LSTM taking in outputs of the first LSTM and
+            computing the final results. Default: 1
+        '''
+        self.lstm = nn.LSTM(input_size=self.embed_size,
+                            hidden_size=self.hidden_dim,
+                            num_layers=self.num_layers,
                             dropout=0.5,
                             bidirectional=False,
-                            batch_first=True)
+                            batch_first=False)
 
         # Define the output layer
         self.linear = nn.Linear(self.hidden_dim, output_dim)
@@ -31,7 +41,7 @@ class LSTM(nn.Module):
                 torch.zeros(self.num_layers, self.batch_size, self.hidden_dim))
 
     def forward(self, input):
-        #in_ = input.view(len(input), -1)
+        # in_ = input.view(len(input), -1)
         embeds = self.embeddings(input)
 
         # Forward pass through LSTM layer
@@ -39,11 +49,10 @@ class LSTM(nn.Module):
         # shape of self.hidden: (a, b), where a and b both
         # have shape (num_layers, batch_size, hidden_dim).
 
-        lstm_out, self.hidden = self.lstm(embeds.view(self.batch_size, -1, self.embed_size))
+        lstm_out, self.hidden = self.lstm(embeds)
 
         # Only take the output from the final timetep
         # Can pass on the entirety of lstm_out to the next layer if it is a seq2seq prediction
-        y_pred = self.linear(lstm_out[:, -1, :])
+        xx = lstm_out[-1, :, :]
+        y_pred = self.linear(xx)
         return y_pred.view(-1)
-
-
