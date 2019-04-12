@@ -1,8 +1,5 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-from torch.autograd import Variable
 
 
 class LSTM(nn.Module):
@@ -53,6 +50,5 @@ class LSTM(nn.Module):
 
         # Only take the output from the final timetep
         # Can pass on the entirety of lstm_out to the next layer if it is a seq2seq prediction
-        xx = lstm_out[-1, :, :]
-        y_pred = self.linear(xx)
+        y_pred = self.linear(lstm_out[-1, :, :])
         return y_pred.view(-1)
