@@ -13,8 +13,9 @@ class LSTM(nn.Module):
 
         self.embeddings = nn.Embedding(self.vocab_size, self.embed_size)
 
-        # Define the LSTM layer
         '''
+        Define the LSTM layer
+        
         input_size: The number of expected features in the input `x`
         hidden_size: The number of features in the hidden state `h`
         num_layers: Number of recurrent layers. E.g., setting ``num_layers=2``

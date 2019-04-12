@@ -3,28 +3,28 @@ import numpy as np
 
 from torchtext.data import Field
 from torchtext.data import TabularDataset
-from torchtext.vocab import Vocab, GloVe
+from torchtext.vocab import GloVe
 from torchtext.data import Iterator, BucketIterator
-from torchtext.vocab import Vectors
 
 from tqdm.auto import tqdm
 from pprint import pprint
 
 from model.model import LSTM
 
+''' Specify a device to work on (CPU / GPU) '''
 device = torch.device('cuda:0' if (torch.cuda.is_available()) else 'cpu')
 pprint("is CUDA available: {} so running on {}".format(torch.cuda.is_available(), device))
 
-# defining Fields for data sets
+''' Defining Fields for the training and testing data sets '''
 text_field = Field(sequential=True, tokenize=lambda x: x.split(), lower=True, pad_first=True)
 label_field = Field(sequential=True, lower=True, use_vocab=True, is_target=True, pad_first=True)
 
-train_valid_datafields = [("id", None), ("type", None), ("review", text_field), ("label", label_field)]
-test_datafields = [("id", None), ("type", None), ("review", text_field), ("label", label_field)]
-
+''' Create dicts to load data from the specified columns and pre-process them during the Field instructions '''
+train_valid_data_fields = [("id", None), ("type", None), ("review", text_field), ("label", label_field)]
+test_data_fields = [("id", None), ("type", None), ("review", text_field), ("label", label_field)]
 has_sentiment_filter = lambda example: example.label[0] != 'unsup'
 
-# creating datsets
+''' Define data sets '''
 train_data_set, valid_data_set = TabularDataset.splits(
     path="../resources/data",
     train='imdb_train.csv',
@@ -32,55 +32,56 @@ train_data_set, valid_data_set = TabularDataset.splits(
     filter_pred=has_sentiment_filter,
     format='csv',
     skip_header=True,
-    fields=train_valid_datafields)
+    fields=train_valid_data_fields)
 
 test_dataset = TabularDataset(
     path="../resources/data/imdb_test.csv",
     format='csv',
     filter_pred=has_sentiment_filter,
     skip_header=True,
-    fields=test_datafields)
+    fields=test_data_fields)
 
-
+''' Get embedding from cache '''
 vectors = GloVe(name='6B', dim=100, cache='..\.vector_cache')
 
+''' Build vocabulary and embed it '''
 text_field.build_vocab(train_data_set, test_dataset, vectors=vectors)
 label_field.build_vocab(valid_data_set)
 
-# vocab
-vocab: Vocab = text_field.vocab
-
-# Bucket Iterator
+''' Define Bucket Iterators '''
 train_iter, val_iter = BucketIterator.splits(
     (train_data_set, valid_data_set),
     batch_sizes=(128, 128),
-    device=device,  # if you want to use the GPU, specify the GPU number here
+    device=device,
     sort_key=lambda x: len(x.text_field),
-    # the BucketIterator needs to be told what function it should use to group the data.
     sort_within_batch=False,
-    repeat=False  # we pass repeat=False because we want to wrap this Iterator layer.
+    repeat=False
 )
-test_iter = Iterator(test_dataset, batch_size=128, device=device, sort=False, sort_within_batch=False, repeat=False)
 
-# the LSTM model
-model = LSTM(vocab_size=len(text_field.vocab.stoi), embed_size=100, hidden_dim=180, batch_size=128, output_dim=1, num_layers=1)
+test_iter = Iterator(test_dataset,
+                     batch_size=128,
+                     device=device,
+                     sort=False,
+                     sort_within_batch=False,
+                     repeat=False)
+
+
+''' Define model '''
+model = LSTM(vocab_size=len(text_field.vocab.stoi),
+             embed_size=100,
+             hidden_dim=180,
+             batch_size=128,
+             output_dim=1,
+             num_layers=1)
+
+''' Set the vocabulary from the dataset to embedding layer '''
 model.embeddings.weight.data = text_field.vocab.vectors
 model.cuda()
 
-'''
-for example in train_dataset:
-    for word in example.review:
-        pprint(word)
-        
-        if word in text_field.vocab.itos:
-            pprint(model.embeddings(word))
-'''
-
-# training the LSTM model
+''' Training phrase '''
 num_epochs = 10
 loss_fn = torch.nn.MSELoss(size_average=True)
 optimiser = torch.optim.Adam(model.parameters(), lr=0.001)
-
 
 for epoch in range(num_epochs):
     model.train()
@@ -88,14 +89,15 @@ for epoch in range(num_epochs):
     hist = []
     pbar = tqdm(enumerate(train_iter))
     for i, batch in pbar:
-        # Clear stored gradient
 
+        # Clear stored gradient
         model.zero_grad()
         text, target = batch.review, batch.label
 
         # Initialise hidden state
         # Don't do this if you want your LSTM to be stateful
         model.hidden = model.init_hidden()
+
         # Forward pass
         y_pred = model(text)
 
