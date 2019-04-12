@@ -3,12 +3,14 @@ import numpy as np
 
 from torchtext.data import Field
 from torchtext.data import TabularDataset
-from torchtext.vocab import Vocab
+from torchtext.vocab import Vocab, GloVe
 from torchtext.data import Iterator, BucketIterator
+from torchtext.vocab import Vectors
 
 from tqdm.auto import tqdm
-from model.model import LSTM
 from pprint import pprint
+
+from model.model import LSTM
 
 device = torch.device('cuda:0' if (torch.cuda.is_available()) else 'cpu')
 pprint("is CUDA available: {} so running on {}".format(torch.cuda.is_available(), device))
@@ -24,7 +26,7 @@ has_sentiment_filter = lambda example: example.label[0] != 'unsup'
 
 # creating datsets
 train_data_set, valid_data_set = TabularDataset.splits(
-    path="resources/data",
+    path="../resources/data",
     train='imdb_train.csv',
     validation="imdb_test.csv",
     filter_pred=has_sentiment_filter,
@@ -33,14 +35,16 @@ train_data_set, valid_data_set = TabularDataset.splits(
     fields=train_valid_datafields)
 
 test_dataset = TabularDataset(
-    path="resources/data/imdb_test.csv",
+    path="../resources/data/imdb_test.csv",
     format='csv',
     filter_pred=has_sentiment_filter,
     skip_header=True,
     fields=test_datafields)
 
 
-text_field.build_vocab(train_data_set, test_dataset, vectors='glove.6B.100d')
+vectors = GloVe(name='6B', dim=100, cache='..\.vector_cache')
+
+text_field.build_vocab(train_data_set, test_dataset, vectors=vectors)
 label_field.build_vocab(valid_data_set)
 
 # vocab
