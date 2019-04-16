@@ -9,7 +9,7 @@ from torchtext.data import Iterator, BucketIterator
 from tqdm.auto import tqdm
 from pprint import pprint
 
-from .model.model import LSTM
+from model.model import LSTM
 
 ''' Specify a device to work on (CPU / GPU) '''
 device = torch.device('cuda:0' if (torch.cuda.is_available()) else 'cpu')
