@@ -1,5 +1,8 @@
 import torch
 import torch.nn as nn
+from tqdm import tqdm
+import numpy as np
+from pprint import pprint
 
 
 class LSTM(nn.Module):
@@ -53,3 +56,56 @@ class LSTM(nn.Module):
         # Can pass on the entirety of lstm_out to the next layer if it is a seq2seq prediction
         y_pred = self.linear(lstm_out[-1, :, :])
         return y_pred.view(-1)
+
+    def fit(self, data_loader, val_data_loader, num_epochs, loss_fn, optimiser):
+        for epoch in range(num_epochs):
+            # ??
+            self.train()
+
+            hist = []
+            pbar = tqdm(enumerate(data_loader))
+            for i, batch in pbar:
+
+                # Clear stored gradient
+                self.zero_grad()
+                text, target = batch.review, batch.label
+
+                # Initialise hidden state
+                # Don't do this if you want your LSTM to be stateful
+                self.hidden = self.init_hidden()
+
+                # Forward pass
+                y_pred = self(text)
+
+                target = target.float().view(-1)
+                loss = loss_fn(y_pred, target)
+
+                hist.append(loss.item())
+
+                # Zero out gradient, else they will accumulate between epochs
+                optimiser.zero_grad()
+
+                # Backward pass
+                loss.backward()
+
+                # Update parameters
+                optimiser.step()
+
+                pbar.set_description('Epoch [{}/{}], Loss: {:.4f}'.format(epoch + 1, num_epochs, np.average(hist)))
+
+            test_preds = []
+            golden_preds = []
+            for batch in tqdm(val_data_loader):
+                text, target = batch.review, batch.label
+
+                preds = self(text)
+                preds = preds.cpu().data.numpy()
+                # the actual outputs of the model are logits, so we need to pass these values to the sigmoid function
+                # preds = 1 / (1 + np.exp(-preds))
+                test_preds = np.append(test_preds, preds)
+                golden_preds = np.append(golden_preds, target.cpu())
+                test_preds = np.hstack(test_preds)
+                golden_preds = np.hstack(golden_preds)
+
+            equals = np.sum(np.equal(test_preds.round(), golden_preds.round()))
+            pprint('Acc: {:.4f}'.format(equals / test_preds.size))

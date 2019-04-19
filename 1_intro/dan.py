@@ -9,6 +9,8 @@ from torchtext.data import Iterator, BucketIterator
 from tqdm.auto import tqdm
 from pprint import pprint
 
+import sys
+sys.path.append('..')
 from model.model import LSTM
 
 ''' Specify a device to work on (CPU / GPU) '''
@@ -83,53 +85,8 @@ num_epochs = 10
 loss_fn = torch.nn.MSELoss(size_average=True)
 optimiser = torch.optim.Adam(model.parameters(), lr=0.001)
 
-for epoch in range(num_epochs):
-    model.train()
-
-    hist = []
-    pbar = tqdm(enumerate(train_iter))
-    for i, batch in pbar:
-
-        # Clear stored gradient
-        model.zero_grad()
-        text, target = batch.review, batch.label
-
-        # Initialise hidden state
-        # Don't do this if you want your LSTM to be stateful
-        model.hidden = model.init_hidden()
-
-        # Forward pass
-        y_pred = model(text)
-
-        target = target.float().view(-1)
-        loss = loss_fn(y_pred, target)
-
-        hist.append(loss.item())
-
-        # Zero out gradient, else they will accumulate between epochs
-        optimiser.zero_grad()
-
-        # Backward pass
-        loss.backward()
-
-        # Update parameters
-        optimiser.step()
-
-        pbar.set_description('Epoch [{}/{}], Loss: {:.4f}'.format(epoch + 1, num_epochs, np.average(hist)))
-
-    test_preds = []
-    golden_preds = []
-    for batch in tqdm(test_iter):
-        text, target = batch.review, batch.label
-
-        preds = model(text)
-        preds = preds.cpu().data.numpy()
-        # the actual outputs of the model are logits, so we need to pass these values to the sigmoid function
-        # preds = 1 / (1 + np.exp(-preds))
-        test_preds = np.append(test_preds, preds)
-        golden_preds = np.append(golden_preds, target.cpu())
-        test_preds = np.hstack(test_preds)
-        golden_preds = np.hstack(golden_preds)
-
-    mse = ((test_preds - golden_preds) ** 2).mean()
-    pprint('MSE: {:.4f}'.format(mse))
+model.fit(data_loader=train_iter,
+          val_data_loader=test_iter,
+          num_epochs=num_epochs,
+          loss_fn=loss_fn,
+          optimiser=optimiser)
