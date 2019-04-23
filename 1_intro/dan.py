@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+import nltk
 from nltk.corpus import stopwords
 nltk.download('stopwords')
 
@@ -47,6 +48,8 @@ test_dataset = TabularDataset(
 
 ''' Get embedding from cache '''
 vectors = GloVe(name='6B', dim=100, cache='..\.vector_cache')
+
+pprint(vectors)
 
 ''' Build vocabulary and embed it '''
 text_field.build_vocab(train_data_set, test_dataset, vectors=vectors)
@@ -105,7 +108,7 @@ model.embeddings.weight.data = text_field.vocab.vectors
 model.cuda()
 
 num_epochs = 10
-loss_fn = torch.nn.MSELoss(size_average=True)
+loss_fn = torch.nn.CrossEntropyLoss()
 optimiser = torch.optim.Adam(model.parameters(), lr=0.001)
 
 '''

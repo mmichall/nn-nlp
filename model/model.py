@@ -147,14 +147,12 @@ class NBoW(nn.Module):
             hist = []
             pbar = tqdm(enumerate(data_loader))
             for i, batch in pbar:
-                # Clear stored gradient
-                self.zero_grad()
                 text, target = batch.review, batch.label
 
                 # Forward pass
                 y_pred = self(text)
 
-                target = target.float().view(-1)
+                target = target.float()
                 loss = loss_fn(y_pred, target)
 
                 hist.append(loss.item())
