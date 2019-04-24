@@ -32,7 +32,7 @@ class LSTM(nn.Module):
                             num_layers=self.num_layers,
                             dropout=0.5,
                             bidirectional=False,
-                            batch_first=False)
+                            batch_first=True)
 
         # Define the output layer
         self.linear = nn.Linear(self.hidden_dim, output_dim)
@@ -55,8 +55,8 @@ class LSTM(nn.Module):
 
         # Only take the output from the final timetep
         # Can pass on the entirety of lstm_out to the next layer if it is a seq2seq prediction
-        y_pred = self.linear(lstm_out[-1, :, :])
-        return y_pred.view(-1)
+        y_pred = torch.softmax(self.linear(lstm_out[:, -1, :]), 1)
+        return y_pred
 
     def fit(self, data_loader, val_data_loader, num_epochs, loss_fn, optimiser):
         for epoch in range(num_epochs):
@@ -78,8 +78,15 @@ class LSTM(nn.Module):
                 # Forward pass
                 y_pred = self(text)
 
-                target = target.float().view(-1)
-                loss = loss_fn(y_pred, target)
+                # target = target.float()
+
+                labels_one_hot = torch.FloatTensor(target.size()[0], 2, device=torch.device('cpu')).zero_()
+                target = target.to(torch.device('cpu'))
+                labels_one_hot.scatter_(1, target, 1)
+                labels_one_hot = labels_one_hot.to(torch.device('cuda:0'))
+                # target = target.to(torch.device('cuda:0'))
+
+                loss = loss_fn(y_pred, labels_one_hot.float())
 
                 hist.append(loss.item())
 
@@ -99,7 +106,7 @@ class LSTM(nn.Module):
             for batch in tqdm(val_data_loader):
                 text, target = batch.review, batch.label
 
-                preds = self(text)
+                preds = self(text).argmax(1)
                 preds = preds.cpu().data.numpy()
                 # the actual outputs of the model are logits, so we need to pass these values to the sigmoid function
                 # preds = 1 / (1 + np.exp(-preds))
@@ -216,11 +223,12 @@ class DeepCBoW(torch.nn.Module):
 
     def forward(self, words):
         emb = self.embeddings(words)
-        emb_sum = torch.sum(emb, dim=1) # size(emb_sum) = emb_size
+        emb_sum = torch.mean(emb, dim=1) # size(emb_sum) = emb_size
         h = emb_sum # size(h) = 1 x emb_size
         for i in range(self.nlayers):
             h = torch.tanh(self.linears[i](h))
-        out = self.output_layer(h)
+        o_ = self.output_layer(h)
+        out = torch.softmax(o_, 1)
         return out
 
     def fit(self, data_loader, val_data_loader, num_epochs, loss_fn, optimiser):
@@ -238,8 +246,21 @@ class DeepCBoW(torch.nn.Module):
                 # Forward pass
                 y_pred = self(text)
 
-                target = target.float().view(-1)
-                loss = loss_fn(y_pred, target)
+                # target = target.float().view(-1)
+
+                batch_size, k = target.size()
+                # pprint(batch_size)
+                # pprint(k)
+                labels_one_hot = torch.FloatTensor(target.size()[0], 2, device=torch.device('cpu')).zero_()
+                target = target.to(torch.device('cpu'))
+                labels_one_hot.scatter_(1, target, 1)
+                labels_one_hot = labels_one_hot.to(torch.device('cuda:0'))
+                #target = target.to(torch.device('cuda:0'))
+
+                loss = loss_fn(y_pred, labels_one_hot.float())
+
+                # pprint(y_pred)
+                # pprint(target.view(-1))
 
                 hist.append(loss.item())
 
@@ -259,7 +280,7 @@ class DeepCBoW(torch.nn.Module):
             for batch in tqdm(val_data_loader):
                 text, target = batch.review, batch.label
 
-                preds = self(text)
+                preds = self(text).argmax(1)
                 preds = preds.cpu().data.numpy()
                 # the actual outputs of the model are logits, so we need to pass these values to the sigmoid function
                 # preds = 1 / (1 + np.exp(-preds))
