@@ -104,6 +104,11 @@ model.embeddings.weight.data = text_field.vocab.vectors
 model.cuda()
 
 num_epochs = 10
+
+''' 
+    Intresting point: Why BCE is better than MSE? (MSE returns 0.25
+    error which means that the output was set always equally between 1 and 0)
+'''
 loss_fn = torch.nn.BCELoss()
 optimiser = torch.optim.Adam(model.parameters(), lr=0.001)
 
