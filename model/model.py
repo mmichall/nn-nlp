@@ -32,7 +32,6 @@ class LSTM(nn.Module):
         self.lstm = nn.LSTM(input_size=self.embed_size,
                             hidden_size=self.hidden_dim,
                             num_layers=self.num_layers,
-                            dropout=0.5,
                             bidirectional=self.bidirectional,
                             batch_first=True)
 
