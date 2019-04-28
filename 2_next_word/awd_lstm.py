@@ -33,7 +33,7 @@ train_iter, test_iter = BucketIterator.splits(
     (train, test),
     batch_sizes=(64, 64),
     device=device,
-    sort_key=lambda x: len(x.text_field),
+    sort_key=lambda x: len(x.text),
     sort_within_batch=False,
     repeat=False,
     shuffle=True
