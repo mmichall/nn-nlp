@@ -46,7 +46,8 @@ model = LSTM(vocab_size=len(TEXT.vocab.stoi),
              hidden_dim=200,
              batch_size=64,
              output_dim=2,
-             num_layers=2)
+             num_layers=2,
+             bidirectional=True)
 
 model.embeddings.weight.data = TEXT.vocab.vectors
 model.cuda()
