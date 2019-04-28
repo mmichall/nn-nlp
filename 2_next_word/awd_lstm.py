@@ -7,6 +7,9 @@ from torchtext.data import Field, BucketIterator
 from torchtext.vocab import GloVe
 
 from nltk.corpus import stopwords
+
+from model.model import LSTM
+
 nltk.download('stopwords')
 
 ''' Specify a device to work on (CPU / GPU) '''
@@ -34,3 +37,31 @@ train_iter, test_iter = BucketIterator.splits(
     repeat=False,
     shuffle=True
 )
+
+
+''' Define model '''
+model = LSTM(vocab_size=len(TEXT.vocab.stoi),
+             embed_size=300,
+             hidden_dim=200,
+             batch_size=64,
+             output_dim=2,
+             num_layers=2)
+
+model.embeddings.weight.data = TEXT.vocab.vectors
+model.cuda()
+
+num_epochs = 10
+
+''' 
+    Intresting point: Why BCE is better than MSE? (MSE returns 0.25
+    error which means that the output was set always equally between 1 and 0)
+'''
+loss_fn = torch.nn.BCELoss()
+optimiser = torch.optim.Adam(model.parameters(), lr=0.001)
+
+model.fit(data_loader=train_iter,
+          val_data_loader=test_iter,
+          num_epochs=num_epochs,
+          loss_fn=loss_fn,
+          optimiser=optimiser)
+
