@@ -68,7 +68,7 @@ class LSTM(nn.Module):
 
                 # Clear stored gradient
                 self.zero_grad()
-                text, target = batch.review, batch.label
+                text, target = batch.text, batch.label
 
                 # Initialise hidden state
                 # Don't do this if you want your LSTM to be stateful
