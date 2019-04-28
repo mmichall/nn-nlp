@@ -24,7 +24,7 @@ pprint("is CUDA available: {} so running on {}".format(torch.cuda.is_available()
 TEXT = Field(sequential=True, tokenize=lambda x: x.split(),
              lower=True, pad_first=True, batch_first=True,
              stop_words=set(stopwords.words('english')),
-             preprocessing=lambda x: porter.stem(x))
+             preprocessing=lambda x: [porter.stem(word) for word in x])
 LABEL = Field(sequential=True, lower=True, use_vocab=True, is_target=True, unk_token=None, pad_token=None, batch_first=True)
 
 # make splits for data
