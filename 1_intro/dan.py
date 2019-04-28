@@ -14,7 +14,7 @@ from pprint import pprint
 
 import sys
 sys.path.append('..')
-from model.model import LSTM, NBoW, DeepCBoW
+from model.model import LSTM, DeepCBoW
 
 ''' Specify a device to work on (CPU / GPU) '''
 device = torch.device('cuda:0' if (torch.cuda.is_available()) else 'cpu')
