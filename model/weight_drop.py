@@ -26,6 +26,8 @@ class WeightDrop(torch.nn.Module):
         for name_w in self.weights:
             print('Applying weight drop of {} to {}'.format(self.dropout, name_w))
             w = getattr(self.module, name_w)
+            for k in self.module._parameters:
+                print(k)
             del self.module._parameters[name_w]
             self.module.register_parameter(name_w + '_raw', Parameter(w.data))
 
