@@ -6,6 +6,7 @@ from torchtext import datasets
 from torchtext.data import Field, BucketIterator
 from torchtext.vocab import GloVe
 from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer
 
 import sys
 sys.path.append('..')
@@ -18,7 +19,10 @@ device = torch.device('cuda:0' if (torch.cuda.is_available()) else 'cpu')
 pprint("is CUDA available: {} so running on {}".format(torch.cuda.is_available(), device))
 
 # set up fields
-TEXT = Field(sequential=True, tokenize=lambda x: x.split(), lower=True, pad_first=True, batch_first=True, stop_words=set(stopwords.words('english')))
+TEXT = Field(sequential=True, tokenize=lambda x: x.split(),
+             lower=True, pad_first=True, batch_first=True,
+             stop_words=set(stopwords.words('english')),
+             preprocessing=lambda x: PorterStemmer.stem(x))
 LABEL = Field(sequential=True, lower=True, use_vocab=True, is_target=True, unk_token=None, pad_token=None, batch_first=True)
 
 # make splits for data
