@@ -103,7 +103,7 @@ class LSTM(nn.Module):
             test_preds = []
             golden_preds = []
             for batch in tqdm(val_data_loader):
-                text, target = batch.review, batch.label
+                text, target = batch.text, batch.label
 
                 preds = self(text).argmax(1)
                 preds = preds.cpu().data.numpy()
