@@ -4,6 +4,8 @@ from tqdm import tqdm
 import numpy as np
 from pprint import pprint
 
+from model.weight_drop import WeightDrop
+
 
 class LSTM(nn.Module):
     def __init__(self, embed_size, hidden_dim, batch_size, vocab_size, output_dim=1, num_layers=1, bidirectional=False):
@@ -51,7 +53,10 @@ class LSTM(nn.Module):
         # shape of self.hidden: (a, b), where a and b both
         # have shape (num_layers, batch_size, hidden_dim).
 
-        lstm_out, _ = self.lstm(embeds)
+        wdrnn = WeightDrop(self.lstm, ['weight_hh_l0'], dropout=0.9)
+        wdrnn.cuda()
+
+        lstm_out, _ = wdrnn(embeds)
 
         # Only take the output from the final timetep
         # Can pass on the entirety of lstm_out to the next layer if it is a seq2seq prediction
@@ -117,6 +122,7 @@ class LSTM(nn.Module):
 
             equals = np.sum(np.equal(test_preds.round(), golden_preds.round()))
             pprint('Acc: {:.4f}'.format(equals / test_preds.size))
+
 
 class DeepCBoW(torch.nn.Module):
     def __init__(self, nwords, ntags, nlayers, emb_size, hid_size):

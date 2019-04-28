@@ -71,4 +71,3 @@ model.fit(data_loader=train_iter,
           num_epochs=num_epochs,
           loss_fn=loss_fn,
           optimiser=optimiser)
-
