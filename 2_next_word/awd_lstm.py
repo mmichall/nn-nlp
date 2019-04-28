@@ -5,9 +5,10 @@ import torch
 from torchtext import datasets
 from torchtext.data import Field, BucketIterator
 from torchtext.vocab import GloVe
-
 from nltk.corpus import stopwords
 
+import sys
+sys.path.append('..')
 from model.model import LSTM
 
 nltk.download('stopwords')
