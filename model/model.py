@@ -35,7 +35,7 @@ class LSTM(nn.Module):
                             batch_first=True)
 
         # Define the output layer
-        self.linear = nn.Linear(2 if self.bidirectional else 1 * self.hidden_dim, output_dim)
+        self.linear = nn.Linear((2 if self.bidirectional else 1) * self.hidden_dim, output_dim)
 
     def init_hidden(self):
         # This is what we'll initialise our hidden state as
