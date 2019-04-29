@@ -51,6 +51,8 @@ class WeightDrop(torch.nn.Module):
         module_out, _ = self.module.forward(*args)
         return module_out
 
+    def backward(self, *args):
+        return self.module.backward(*args)
 
 if __name__ == '__main__':
     import torch
