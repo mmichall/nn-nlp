@@ -52,10 +52,10 @@ class LSTM(nn.Module):
         # shape of self.hidden: (a, b), where a and b both
         # have shape (num_layers, batch_size, hidden_dim).
 
-        #wdrnn = WeightDrop(self.lstm, ['weight_hh_l0'], dropout=0.9)
-        #wdrnn.cuda()
+        wdrnn = WeightDrop(self.lstm, ['weight_hh_l0'], dropout=0.9)
+        wdrnn.cuda()
 
-        lstm_out, _ = self.lstm(embeds)
+        lstm_out, _ = wdrnn(embeds)
 
         # Only take the output from the final timetep
         # Can pass on the entirety of lstm_out to the next layer if it is a seq2seq prediction
