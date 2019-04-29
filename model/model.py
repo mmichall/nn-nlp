@@ -52,8 +52,8 @@ class LSTM(nn.Module):
         # shape of self.hidden: (a, b), where a and b both
         # have shape (num_layers, batch_size, hidden_dim).
 
-        wdrnn = WeightDrop(self.lstm, ['weight_hh_l0'], dropout=0.9)
-        wdrnn.cuda()
+        #wdrnn = WeightDrop(self.lstm, ['weight_hh_l0'], dropout=0.9)
+        #wdrnn.cuda()
 
         lstm_out, _ = self.lstm(embeds)
 
