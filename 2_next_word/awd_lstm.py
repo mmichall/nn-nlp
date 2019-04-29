@@ -48,7 +48,7 @@ train_iter, test_iter = BucketIterator.splits(
 ''' Define model '''
 model = LSTM(vocab_size=len(TEXT.vocab.stoi),
              embed_size=300,
-             hidden_dim=600,
+             hidden_dim=200,
              batch_size=64,
              output_dim=2,
              num_layers=1,
