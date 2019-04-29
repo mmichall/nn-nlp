@@ -35,11 +35,11 @@ class LSTM(nn.Module):
                             bidirectional=self.bidirectional,
                             batch_first=True)
 
-        self.wdrnn = WeightDrop(self.lstm, ['weight_hh_l0'], dropout=1., variational=True)
-        self.wdrnn.cuda()
+        #self.wdrnn = WeightDrop(self.lstm, ['weight_hh_l0'], dropout=1., variational=True)
+       # self.wdrnn.cuda()
 
-        for k in self.wdrnn.module._parameters:
-            print(k)
+       # for k in self.wdrnn.module._parameters:
+       #     print(k)
 
         # Define the output layer
         self.linear = nn.Linear((2 if self.bidirectional else 1) * self.hidden_dim, output_dim)
@@ -58,15 +58,12 @@ class LSTM(nn.Module):
         # shape of self.hidden: (a, b), where a and b both
         # have shape (num_layers, batch_size, hidden_dim).
 
-        out = self.wdrnn(embeds)
+        out = self.lstm(embeds)
 
         # Only take the output from the final timetep
         # Can pass on the entirety of lstm_out to the next layer if it is a seq2seq prediction
         y_pred = torch.softmax(self.linear(out[:, -1, :]), 1)
         return y_pred
-
-    def backward(self, *args):
-        return self.wdrnn.backward(*args)
 
     def fit(self, data_loader, val_data_loader, num_epochs, loss_fn, optimiser):
         for epoch in range(num_epochs):
