@@ -35,6 +35,12 @@ class LSTM(nn.Module):
                             bidirectional=self.bidirectional,
                             batch_first=True)
 
+        self.wdrnn = WeightDrop(self.lstm, ['weight_hh_l0'], dropout=0.1)
+        self.wdrnn.cuda()
+
+        # for k in wdrnn.module._parameters:
+        #     print(k)
+
         # Define the output layer
         self.linear = nn.Linear((2 if self.bidirectional else 1) * self.hidden_dim, output_dim)
 
@@ -52,13 +58,7 @@ class LSTM(nn.Module):
         # shape of self.hidden: (a, b), where a and b both
         # have shape (num_layers, batch_size, hidden_dim).
 
-        wdrnn = WeightDrop(self.lstm, ['weight_ih_l0'], dropout=0.1)
-        wdrnn.cuda()
-
-        for k in wdrnn.module._parameters:
-            print(k)
-
-        lstm_out, _ = wdrnn(embeds)
+        lstm_out, _ = self.wdrnn(embeds)
 
         # Only take the output from the final timetep
         # Can pass on the entirety of lstm_out to the next layer if it is a seq2seq prediction
