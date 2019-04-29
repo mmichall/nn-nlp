@@ -52,6 +52,7 @@ class WeightDrop(torch.nn.Module):
         return module_out
 
     def backward(self, *args):
+        print('backward')
         for name_w in self.weights:
             raw_w = getattr(self.module, name_w)
             print(raw_w)
