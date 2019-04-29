@@ -38,9 +38,9 @@ class WeightDrop(torch.nn.Module):
                 if raw_w.is_cuda: mask = mask.cuda()
 
                 mask = torch.nn.functional.dropout(mask, p=self.dropout, training=True) * (1 - self.dropout)
-                print(mask)
-                print(mask.expand_as(raw_w))
-                print(mask.expand_as(raw_w) * raw_w)
+              #  print(mask)
+              #  print(mask.expand_as(raw_w))
+               # print(mask.expand_as(raw_w) * raw_w)
                 w = torch.nn.Parameter(mask.expand_as(raw_w) * raw_w)
             else:
                 w = torch.nn.Parameter(torch.nn.functional.dropout(raw_w, p=self.dropout, training=self.training))
