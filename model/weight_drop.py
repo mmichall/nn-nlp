@@ -28,12 +28,13 @@ class WeightDrop(torch.nn.Module):
             w = getattr(self.module, name_w)
             # for k in self.module._parameters:
             #     print(k)
-            del self.module._parameters[name_w]
-            self.module.register_parameter(name_w + '_raw', Parameter(w.data))
+            # del self.module._parameters[name_w]
+            # self.module.register_parameter(name_w + '_raw', Parameter(w.data))
+            self.module.register_parameter(name_w, Parameter(w.data))
 
     def _setweights(self):
         for name_w in self.weights:
-            raw_w = getattr(self.module, name_w + '_raw')
+            raw_w = getattr(self.module, name_w)
             w = None
             if self.variational:
                 mask = torch.autograd.Variable(torch.ones(raw_w.size(0), 1))
