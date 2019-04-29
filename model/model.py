@@ -65,6 +65,9 @@ class LSTM(nn.Module):
         y_pred = torch.softmax(self.linear(out[:, -1, :]), 1)
         return y_pred
 
+    def backward(self, *args):
+        return self.wdrnn.backward(*args)
+
     def fit(self, data_loader, val_data_loader, num_epochs, loss_fn, optimiser):
         for epoch in range(num_epochs):
             # ??
