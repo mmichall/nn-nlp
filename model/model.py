@@ -35,7 +35,7 @@ class LSTM(nn.Module):
                             bidirectional=self.bidirectional,
                             batch_first=True)
 
-        self.wdrnn = WeightDrop(self.lstm, ['weight_hh_l0'], dropout=0.1, variational=True)
+        self.wdrnn = WeightDrop(self.lstm, ['weight_hh_l0'], dropout=0.5, variational=True)
         self.wdrnn.cuda()
 
         for k in self.wdrnn.module._parameters:
