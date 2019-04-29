@@ -58,7 +58,7 @@ class LSTM(nn.Module):
         # shape of self.hidden: (a, b), where a and b both
         # have shape (num_layers, batch_size, hidden_dim).
 
-        out = self.lstm(embeds)
+        out, _ = self.lstm(embeds)
 
         # Only take the output from the final timetep
         # Can pass on the entirety of lstm_out to the next layer if it is a seq2seq prediction
