@@ -34,13 +34,12 @@ class WeightDrop(torch.nn.Module):
         for name_w in self.weights:
             raw_w = getattr(self.module, name_w)
             if self.variational:
-                print(raw_w.size())
                 mask = torch.autograd.Variable(torch.ones(raw_w.size(0), 1))
                 if raw_w.is_cuda: mask = mask.cuda()
                 mask = torch.nn.functional.dropout(mask, p=self.dropout, training=True)
-                print(mask.size())
-                print((mask * raw_w).size())
-                w = torch.nn.Parameter(mask * raw_w)
+                print(mask.expand_as(raw_w).size())
+                print((mask.expand_as(raw_w) * raw_w).size())
+                w = torch.nn.Parameter(mask.expand_as(raw_w) * raw_w)
             else:
                 w = torch.nn.Parameter(torch.nn.functional.dropout(raw_w, p=self.dropout, training=self.training))
             setattr(self.module, name_w, w)
