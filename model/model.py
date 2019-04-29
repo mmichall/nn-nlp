@@ -35,11 +35,11 @@ class LSTM(nn.Module):
                             bidirectional=self.bidirectional,
                             batch_first=True)
 
-        self.wdrnn = WeightDrop(self.lstm, ['weight_hh_l0'], dropout=0.1)
+        self.wdrnn = WeightDrop(self.lstm, ['weight_hh_l0'], dropout=0.1, variational=True)
         self.wdrnn.cuda()
 
-        # for k in wdrnn.module._parameters:
-        #     print(k)
+        for k in self.wdrnn.module._parameters:
+            print(k)
 
         # Define the output layer
         self.linear = nn.Linear((2 if self.bidirectional else 1) * self.hidden_dim, output_dim)
