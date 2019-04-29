@@ -58,11 +58,11 @@ class LSTM(nn.Module):
         # shape of self.hidden: (a, b), where a and b both
         # have shape (num_layers, batch_size, hidden_dim).
 
-        lstm_out, _ = self.wdrnn(embeds)
+        out = self.wdrnn(embeds)
 
         # Only take the output from the final timetep
         # Can pass on the entirety of lstm_out to the next layer if it is a seq2seq prediction
-        y_pred = torch.softmax(self.linear(lstm_out[:, -1, :]), 1)
+        y_pred = torch.softmax(self.linear(out[:, -1, :]), 1)
         return y_pred
 
     def fit(self, data_loader, val_data_loader, num_epochs, loss_fn, optimiser):

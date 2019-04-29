@@ -45,7 +45,8 @@ class WeightDrop(torch.nn.Module):
 
     def forward(self, *args):
         self._setweights()
-        return self.module.forward(*args)
+        module_out, _ = self.module.forward(*args)
+        return module_out
 
 
 if __name__ == '__main__':
