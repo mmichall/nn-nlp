@@ -4,7 +4,7 @@ from tqdm import tqdm
 import numpy as np
 from pprint import pprint
 
-from model.weight_drop import WeightDrop
+from model.weight_drop import WeightDrop, WeightDropLSTM
 
 
 class LSTM(nn.Module):
@@ -21,7 +21,7 @@ class LSTM(nn.Module):
 
         '''
         Define the LSTM layer
-        
+
         input_size: The number of expected features in the input `x`
         hidden_size: The number of features in the hidden state `h`
         num_layers: Number of recurrent layers. E.g., setting ``num_layers=2``
@@ -29,17 +29,17 @@ class LSTM(nn.Module):
             with the second LSTM taking in outputs of the first LSTM and
             computing the final results. Default: 1
         '''
-        self.lstm = nn.LSTM(input_size=self.embed_size,
-                            hidden_size=self.hidden_dim,
-                            num_layers=self.num_layers,
-                            bidirectional=self.bidirectional,
-                            batch_first=True)
 
-        #self.wdrnn = WeightDrop(self.lstm, ['weight_hh_l0'], dropout=1., variational=True)
-       # self.wdrnn.cuda()
+        self.lstm = WeightDropLSTM(input_size=self.embed_size,
+                                   hidden_size=self.hidden_dim,
+                                   num_layers=self.num_layers,
+                                   bidirectional=self.bidirectional,
+                                   batch_first=True,
+                                   weight_dropout=0.5)
+        #        self.lstm.cuda()
 
-       # for k in self.wdrnn.module._parameters:
-       #     print(k)
+        # for k in self.wdrnn.module._parameters:
+        #     print(k)
 
         # Define the output layer
         self.linear = nn.Linear((2 if self.bidirectional else 1) * self.hidden_dim, output_dim)
@@ -73,7 +73,6 @@ class LSTM(nn.Module):
             hist = []
             pbar = tqdm(enumerate(data_loader))
             for i, batch in pbar:
-
                 # Clear stored gradient
                 self.zero_grad()
                 text, target = batch.text, batch.label
@@ -140,8 +139,8 @@ class DeepCBoW(torch.nn.Module):
 
         # add nlayers number of layers
         self.linears = nn.ModuleList([
-                nn.Linear(emb_size if i == 0 else hid_size, hid_size) \
-                for i in range(nlayers)])
+            nn.Linear(emb_size if i == 0 else hid_size, hid_size) \
+            for i in range(nlayers)])
         # initialize the weights with xavier uniform (Glorot, X. & Bengio, Y. (2010))
         for i in range(nlayers):
             nn.init.xavier_uniform_(self.linears[i].weight)
@@ -152,8 +151,8 @@ class DeepCBoW(torch.nn.Module):
 
     def forward(self, words):
         emb = self.embeddings(words)
-        emb_sum = torch.mean(emb, dim=1) # size(emb_sum) = emb_size
-        h = emb_sum # size(h) = 1 x emb_size
+        emb_sum = torch.mean(emb, dim=1)  # size(emb_sum) = emb_size
+        h = emb_sum  # size(h) = 1 x emb_size
         for i in range(self.nlayers):
             h = torch.tanh(self.linears[i](h))
         o_ = self.output_layer(h)
@@ -184,7 +183,7 @@ class DeepCBoW(torch.nn.Module):
                 target = target.to(torch.device('cpu'))
                 labels_one_hot.scatter_(1, target, 1)
                 labels_one_hot = labels_one_hot.to(torch.device('cuda:0'))
-                #target = target.to(torch.device('cuda:0'))
+                # target = target.to(torch.device('cuda:0'))
 
                 loss = loss_fn(y_pred, labels_one_hot.float())
 
@@ -223,4 +222,3 @@ class DeepCBoW(torch.nn.Module):
 
             equals = np.sum(np.equal(test_preds.round(), golden_preds.round()))
             pprint('Acc: {:.4f}'.format(equals / test_preds.size))
-

@@ -48,13 +48,15 @@ train_iter, test_iter = BucketIterator.splits(
 ''' Define model '''
 model = LSTM(vocab_size=len(TEXT.vocab.stoi),
              embed_size=300,
-             hidden_dim=200,
+             hidden_dim=400,
              batch_size=64,
              output_dim=2,
              num_layers=1,
              bidirectional=False)
 
 model.embeddings.weight.data = TEXT.vocab.vectors
+
+model.to(device)
 model.cuda()
 
 num_epochs = 10
