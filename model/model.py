@@ -35,7 +35,7 @@ class LSTM(nn.Module):
                                    num_layers=self.num_layers,
                                    bidirectional=self.bidirectional,
                                    batch_first=True,
-                                   weight_dropout=0.5)
+                                   weight_dropout=0.9)
         #        self.lstm.cuda()
 
         # for k in self.wdrnn.module._parameters:
